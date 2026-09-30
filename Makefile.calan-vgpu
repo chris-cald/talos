@@ -1,5 +1,8 @@
 .PHONY: vgpu-kernel vgpu-imager
 
+QEMU_GUEST_AGENT_EXTENSION_IMAGE ?= ghcr.io/siderolabs/qemu-guest-agent:11.1.1@sha256:ee1e2803c27c2ecc23dda01af29f7efbd7493637e216b70110b9f29d0c284725
+VGPU_EXTENSION_IMAGE = $(shell python3 -c 'import json, os; print(json.load(open(os.environ["BUILD_RESULT_PATH"]))["extension_image"])' 2>/dev/null)
+
 vgpu-kernel: ## Build/push the pinned Talos kernel image and record its digest.
 	@test -n "$(BUILD_RESULT_PATH)" || (echo "BUILD_RESULT_PATH is required" >&2; exit 2)
 	@$(MAKE) registry-kernel PUSH=$(PUSH) PLATFORM=$(PLATFORM)
@@ -7,5 +10,5 @@ vgpu-kernel: ## Build/push the pinned Talos kernel image and record its digest.
 
 vgpu-imager: ## Build/push the Talos installer and record its digest.
 	@test -n "$(BUILD_RESULT_PATH)" || (echo "BUILD_RESULT_PATH is required" >&2; exit 2)
-	@$(MAKE) installer-base imager installer PUSH=$(PUSH) PLATFORM=$(PLATFORM)
+	@$(MAKE) installer-base imager installer PUSH=$(PUSH) PLATFORM=$(PLATFORM) IMAGER_ARGS="--system-extension-image $(VGPU_EXTENSION_IMAGE) --system-extension-image $(QEMU_GUEST_AGENT_EXTENSION_IMAGE)"
 	@python3 -c 'import json, os, pathlib, subprocess; p=pathlib.Path(os.environ["BUILD_RESULT_PATH"]); p.parent.mkdir(parents=True, exist_ok=True); data=json.loads(p.read_text()) if p.exists() else {}; ref="$(REGISTRY_AND_USERNAME)/installer$(IMAGE_NAME_SUFFIX):$(IMAGE_TAG_OUT)"; digest=subprocess.check_output(["crane","digest",ref], text=True).strip(); data["installer_image"]=ref+"@"+digest; p.write_text(json.dumps(data, indent=2)+chr(10))'
