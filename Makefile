@@ -438,6 +438,8 @@ image-%: ## Builds the specified image. Valid options are aws, azure, digital-oc
 		docker run --rm -t \
 			--network=host \
 			--user $(shell id -u):$(shell id -g) \
+			-e DOCKER_CONFIG=/docker-config \
+			-v $(HOME)/.docker:/docker-config:ro \
 			-v $(PWD)/$(ARTIFACTS):/secureboot:ro \
 			-v $(PWD)/$(ARTIFACTS):/out \
 			-e GITHUB_TOKEN \
