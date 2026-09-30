@@ -804,3 +804,5 @@ ci-temp-release-tag: ## Generates a temporary release tag for CI run.
 		echo "TAG=$(CI_RELEASE_TAG)" >> "$${GITHUB_ENV}"; \
 		echo "ABBREV_TAG=$(CI_RELEASE_TAG)" >> "$${GITHUB_ENV}"; \
 	fi
+
+-include Makefile.calan-vgpu

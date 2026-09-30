@@ -1,0 +1,11 @@
+.PHONY: vgpu-kernel vgpu-imager
+
+vgpu-kernel: ## Build/push the pinned Talos kernel image and record its digest.
+	@test -n "$(BUILD_RESULT_PATH)" || (echo "BUILD_RESULT_PATH is required" >&2; exit 2)
+	@$(MAKE) registry-kernel PUSH=$(PUSH) PLATFORM=$(PLATFORM)
+	@python3 -c 'import json, os, pathlib, subprocess; p=pathlib.Path(os.environ["BUILD_RESULT_PATH"]); p.parent.mkdir(parents=True, exist_ok=True); data=json.loads(p.read_text()) if p.exists() else {}; ref="$(REGISTRY_AND_USERNAME)/kernel$(IMAGE_NAME_SUFFIX):$(IMAGE_TAG_OUT)"; digest=subprocess.check_output(["crane","digest",ref], text=True).strip(); data["kernel_image"]=ref+"@"+digest; p.write_text(json.dumps(data, indent=2)+"\\n")'
+
+vgpu-imager: ## Build/push the Talos installer and record its digest.
+	@test -n "$(BUILD_RESULT_PATH)" || (echo "BUILD_RESULT_PATH is required" >&2; exit 2)
+	@$(MAKE) installer PUSH=$(PUSH) PLATFORM=$(PLATFORM)
+	@python3 -c 'import json, os, pathlib, subprocess; p=pathlib.Path(os.environ["BUILD_RESULT_PATH"]); p.parent.mkdir(parents=True, exist_ok=True); data=json.loads(p.read_text()) if p.exists() else {}; ref="$(REGISTRY_AND_USERNAME)/installer$(IMAGE_NAME_SUFFIX):$(IMAGE_TAG_OUT)"; digest=subprocess.check_output(["crane","digest",ref], text=True).strip(); data["installer_image"]=ref+"@"+digest; p.write_text(json.dumps(data, indent=2)+"\\n")'
